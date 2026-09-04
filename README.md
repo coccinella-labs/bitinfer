@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/basebin/bitinfer/main/.github/assets/thumbnail.png" alt="bitinfer" width="100%">
+</p>
+
 # BitInfer
 
 <!-- Toggle between styles: Click to switch -->
