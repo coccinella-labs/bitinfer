@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/basebin/bitinfer/main/.github/assets/thumbnail.png" alt="bitinfer" width="100%">
+  <img src="https://raw.githubusercontent.com/Coccinella-Labs/bitinfer/main/.github/assets/thumbnail.png" alt="bitinfer" width="100%">
 </p>
 
 # BitInfer
@@ -40,7 +40,7 @@ After building and benchmarking, we had something that consistently beats vanill
 
 ```bash
 # Clone and run
-git clone https://github.com/harpertoken/bitinfer
+git clone https://github.com/Coccinella-Labs/bitinfer
 cd bitinfer
 pip install -r requirements.txt
 
@@ -82,7 +82,7 @@ BitInfer delivers up to 1.65x faster inference speeds while reducing memory usag
 ## Installation
 
 ```bash
-git clone https://github.com/harpertoken/bitinfer
+git clone https://github.com/Coccinella-Labs/bitinfer
 cd bitinfer
 pip install -r requirements.txt
 ```
