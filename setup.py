@@ -16,7 +16,7 @@ setup(
     python_requires=">=3.9",
     author="harpertoken",
     author_email="harpertoken@icloud.com",
-    url="https://github.com/harpertoken/bitinfer",
+    url="https://github.com/coccinella-labs/bitinfer",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

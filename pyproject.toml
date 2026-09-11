@@ -45,9 +45,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/harpertoken/bitinfer"
-Repository = "https://github.com/harpertoken/bitinfer"
-Issues = "https://github.com/harpertoken/bitinfer/issues"
+Homepage = "https://github.com/coccinella-labs/bitinfer"
+Repository = "https://github.com/coccinella-labs/bitinfer"
+Issues = "https://github.com/coccinella-labs/bitinfer/issues"
 
 [project.scripts]
 bitinfer = "cli:main"
