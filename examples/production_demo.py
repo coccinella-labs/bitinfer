@@ -17,7 +17,7 @@ def demo_production_features():
 
     # Initialize BitInfer with caching
     print("[package] Loading model with caching enabled...")
-    model = BitInfer("prajjwal1/bert-tiny", use_cache=True)
+    model = BitInfer("hf-internal-testing/tiny-random-bert", use_cache=True)
 
     # Cache info
     cache_info = model.cache_info()

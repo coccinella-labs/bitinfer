@@ -62,7 +62,7 @@ jobs:
 
     - name: Test CLI functionality
       run: |
-        python cli.py prajjwal1/bert-tiny --text "CI test" --benchmark
+        python cli.py hf-internal-testing/tiny-random-bert --text "CI test" --benchmark
 
     - name: Test basic functionality
       run: |
@@ -70,7 +70,7 @@ jobs:
         import sys
         sys.path.insert(0, 'python')
         from core import BitInfer
-        model = BitInfer('prajjwal1/bert-tiny')
+        model = BitInfer('hf-internal-testing/tiny-random-bert')
         result = model.infer('Test')
         print(f'Success: {result.last_hidden_state.shape}')
         "

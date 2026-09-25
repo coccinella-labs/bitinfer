@@ -45,7 +45,7 @@ cd bitinfer
 pip install -r requirements.txt
 
 # Try it out
-python cli.py prajjwal1/bert-tiny --text "Hello BitInfer!" --benchmark
+python cli.py hf-internal-testing/tiny-random-bert --text "Hello BitInfer!" --benchmark
 ```
 
 ### The numbers
@@ -223,7 +223,7 @@ python cli.py distilbert-base-uncased --text "Hello BitInfer!"
 python cli.py bert-base-uncased --file inputs.txt --format json --output results.json
 
 # Streaming with custom batch size
-python cli.py prajjwal1/bert-tiny --batch "Text 1" "Text 2" "Text 3" --streaming --batch-size 2
+python cli.py hf-internal-testing/tiny-random-bert --batch "Text 1" "Text 2" "Text 3" --streaming --batch-size 2
 
 # Performance benchmarking
 python cli.py distilbert-base-uncased --text "Benchmark test" --benchmark
