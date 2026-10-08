@@ -10,6 +10,38 @@ Read this before trusting a performance claim, because the honest answer depends
 
 The previous version of this README quoted a single 1.65x figure with no model size or hardware attached. That number was not reproducible. Every figure below comes from `bench.py`, which is in the repository and regenerates the table. There are no MPS measurements.
 
+## Capability
+
+Verified by running each row against this checkout, not read off the source.
+
+| Capability                     | BitInfer |
+| ------------------------------ | -------- |
+| Load Hugging Face model        | **Yes**  |
+| Tokenization                   | **Yes**  |
+| CPU/MPS execution              | **Yes**  |
+| Batch inference                | **Yes**  |
+| Streaming inference            | **Yes**  |
+| Adaptive batching              | **Yes**  |
+| Model caching                  | **Yes**  |
+| Quantization/optimization path | **Yes**  |
+| Training                       | **No**   |
+| Backpropagation                | **No**   |
+| Optimizer                      | **No**   |
+| Fine-tuning                    | **No**   |
+| Distributed training           | **No**   |
+
+Notes on the rows that are easy to misread:
+
+- **MPS is the default device** and the tensors do land on the GPU, but every
+  performance number below is CPU. MPS runs; MPS speed is unmeasured.
+- **Quantization path Yes** does not mean 8-bit. `quantization="pytorch"` calls
+  `quantize_dynamic(dtype=torch.qint8)`, which raises on Apple Silicon, and the
+  handler falls back to `model.half()`. The path exists and works; it ends in
+  float16.
+- The five **No** rows are structural. There is no `torch.optim`, no `.backward()`,
+  no `requires_grad`, and no `torch.distributed` anywhere in the tree, so there is
+  no training code to switch off.
+
 ## Install
 
 ```bash
