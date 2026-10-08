@@ -8,3 +8,7 @@ Thumbs.db
 
 # CMake build artifacts
 build/
+
+# Editable installs and packaging
+*.egg-info/
+dist/
