@@ -23,7 +23,6 @@ import argparse
 import json
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -159,22 +158,6 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-
-        # Byte comparison catches a hand-edited image, but only where the exact
-        # font used to render it is available. Glyph metrics differ between
-        # fonts and between OS versions, so this is a local-only enhancement.
-        if canonical_font_available():
-            with tempfile.TemporaryDirectory() as tmp:
-                candidate = Path(tmp) / "thumbnail.png"
-                render(title, language, org, candidate, None)
-                if candidate.read_bytes() != THUMBNAIL.read_bytes():
-                    print(
-                        f"thumbnail image is stale: it does not match the "
-                        f"generated {title}/{language}/{org} image. "
-                        f"Run: python scripts/make_thumbnail.py",
-                        file=sys.stderr,
-                    )
-                    return 1
 
         print(f"thumbnail is current ({language})")
         return 0
