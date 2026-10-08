@@ -59,6 +59,7 @@ REPO = "coccinella-labs/bitinfer"
 THUMBNAIL = (
     Path(__file__).resolve().parent.parent / ".github" / "assets" / "thumbnail.png"
 )
+SIDECAR = THUMBNAIL.with_suffix(".meta.json")
 
 
 # The committed banner was rendered with Arial. Glyph metrics differ between
@@ -95,7 +96,9 @@ def primary_language(repo: str) -> str:
     return max(stats.items(), key=lambda kv: kv[1])[0]
 
 
-def render(title: str, language: str, org: str, path: Path) -> None:
+def render(
+    title: str, language: str, org: str, path: Path, sidecar: Path | None = None
+) -> None:
     image = Image.new("RGB", (WIDTH, HEIGHT), BACKGROUND)
     draw = ImageDraw.Draw(image)
 
@@ -113,6 +116,14 @@ def render(title: str, language: str, org: str, path: Path) -> None:
 
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(path, "PNG")
+    if sidecar is not None:
+        sidecar.write_text(
+            json.dumps(
+                {"title": title, "language": language, "org": org},
+                indent=2,
+            )
+            + "\n"
+        )
 
 
 def main() -> int:
@@ -129,31 +140,46 @@ def main() -> int:
     org = args.repo.split("/")[0]
 
     if args.check:
-        # Verifying means reproducing the exact bytes, which needs the font the
-        # committed image was rendered with. Where that font is absent a
-        # mismatch would say nothing about whether the label is right, so skip
-        # instead of reporting a false failure.
-        if not canonical_font_available():
-            print(f"skipping: {CANONICAL_FONT} is unavailable, cannot reproduce")
-            return 0
         if not THUMBNAIL.exists():
             print(f"{THUMBNAIL} is missing", file=sys.stderr)
             return 1
-        with tempfile.TemporaryDirectory() as tmp:
-            candidate = Path(tmp) / "thumbnail.png"
-            render(title, language, org, candidate)
-            same = candidate.read_bytes() == THUMBNAIL.read_bytes()
-        if same:
-            print(f"thumbnail is current ({language})")
-            return 0
-        print(
-            f"thumbnail is stale: it does not match the generated "
-            f"{title}/{language}/{org} image. Run: python scripts/make_thumbnail.py",
-            file=sys.stderr,
-        )
-        return 1
+        if not SIDECAR.exists():
+            print(f"{SIDECAR} is missing; regenerate the thumbnail", file=sys.stderr)
+            return 1
 
-    render(title, language, org, THUMBNAIL)
+        # The sidecar records what the image was generated with. This is the
+        # portable check: it works on any platform regardless of which fonts are
+        # installed, so it is what CI relies on.
+        recorded = json.loads(SIDECAR.read_text())
+        expected = {"title": title, "language": language, "org": org}
+        if recorded != expected:
+            print(
+                f"thumbnail metadata is stale: {SIDECAR} records {recorded} "
+                f"but expected {expected}. Run: python scripts/make_thumbnail.py",
+                file=sys.stderr,
+            )
+            return 1
+
+        # Byte comparison catches a hand-edited image, but only where the exact
+        # font used to render it is available. Glyph metrics differ between
+        # fonts and between OS versions, so this is a local-only enhancement.
+        if canonical_font_available():
+            with tempfile.TemporaryDirectory() as tmp:
+                candidate = Path(tmp) / "thumbnail.png"
+                render(title, language, org, candidate, None)
+                if candidate.read_bytes() != THUMBNAIL.read_bytes():
+                    print(
+                        f"thumbnail image is stale: it does not match the "
+                        f"generated {title}/{language}/{org} image. "
+                        f"Run: python scripts/make_thumbnail.py",
+                        file=sys.stderr,
+                    )
+                    return 1
+
+        print(f"thumbnail is current ({language})")
+        return 0
+
+    render(title, language, org, THUMBNAIL, SIDECAR)
     print(f"wrote {THUMBNAIL} ({title} / {language} / {org})")
     return 0
 
