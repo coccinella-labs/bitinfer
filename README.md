@@ -178,7 +178,9 @@ bindings/  pybind11 binding, unused
 python -m pytest tests/ -v
 ```
 
-CI runs the suite on macOS and lint on Ubuntu. Reverting the cache fix makes `test_cache_preserves_dtype` fail, so that bug cannot return silently.
+CI runs the suite in the `test` job on macOS, alongside lint on Ubuntu. Reverting the cache fix makes `test_cache_preserves_dtype` fail, so that bug cannot return silently.
+
+The pre-commit job lints `python/` and `cli.py`, so the `test` job also runs black, isort and flake8 over `tests/` and `bench.py`.
 
 ## Requirements
 
