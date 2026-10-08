@@ -9,6 +9,17 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
 
+  - repo: local
+    hooks:
+      - id: thumbnail-current
+        name: thumbnail matches the generated image
+        # Regenerate the banner and compare, so the language label cannot drift
+        # again. --language is pinned: the hook must not depend on the network.
+        entry: python3 scripts/make_thumbnail.py --check --language Python
+        language: system
+        pass_filenames: false
+        files: (\.github/assets/thumbnail\.png|scripts/make_thumbnail\.py)
+
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
