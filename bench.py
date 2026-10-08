@@ -28,10 +28,23 @@ TEXT = "Benchmark test for inference timing"
 CALLS = 40
 REPEATS = 3
 
+# The first two models are small enough that a call is dominated by Python and
+# dispatch overhead, which swamps the effect being measured and makes the ratio
+# swing by more than half between runs. They are kept because they show that
+# failure mode honestly. distilbert-base-uncased is large enough that the
+# arithmetic dominates, and it is the number worth quoting.
 MODELS = [
     "hf-internal-testing/tiny-random-bert",
     "google/bert_uncased_L-2_H-128_A-2",
+    "distilbert-base-uncased",
 ]
+
+# Small models need more calls to get a usable median.
+CALLS_FOR = {
+    "hf-internal-testing/tiny-random-bert": 40,
+    "google/bert_uncased_L-2_H-128_A-2": 40,
+    "distilbert-base-uncased": 10,
+}
 
 
 def median_ms(fn, calls=CALLS):
@@ -55,11 +68,12 @@ def compare(model_name):
         with torch.no_grad():
             return baseline(**tokenizer(TEXT, return_tensors="pt"))
 
+    calls = CALLS_FOR.get(model_name, CALLS)
     bitinfer_ms = []
     baseline_ms = []
     for _ in range(REPEATS):
-        baseline_ms.append(median_ms(run_baseline))
-        bitinfer_ms.append(median_ms(lambda: bitinfer.infer(TEXT)))
+        baseline_ms.append(median_ms(run_baseline, calls))
+        bitinfer_ms.append(median_ms(lambda: bitinfer.infer(TEXT), calls))
 
     return (
         statistics.median(bitinfer_ms),

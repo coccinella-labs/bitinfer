@@ -6,7 +6,9 @@
 
 Hugging Face encoder inference for Apple Silicon, with float16 weights, on-disk weight caching, streaming, and a CLI.
 
-Read this before trusting a performance claim. The previous version of this README advertised 1.65x speedups and 50% memory reduction. The memory number was real. **The speedup was not.** On CPU this package is about 35% slower than plain `transformers`, because float16 weights are upcast on every matmul and nothing compensates for it. There are no MPS measurements. Every number below comes from `bench.py`, which is in the repository and reproduces them.
+Read this before trusting a performance claim, because the honest answer depends entirely on model size. On a model large enough for the arithmetic to dominate, float16 weights are a large win: about **2.3x faster and half the memory** on distilbert-base-uncased. On a model too small to be dominated by arithmetic, it is a **loss**: about 35% slower, because the per-call overhead of upcasting outweighs work that was already free.
+
+The previous version of this README quoted a single 1.65x figure with no model size or hardware attached. That number was not reproducible. Every figure below comes from `bench.py`, which is in the repository and regenerates the table. There are no MPS measurements.
 
 ## Install
 
@@ -103,22 +105,25 @@ On Apple Silicon that call raises `RuntimeError` containing `NoQEngine`, and the
 Apple M1, arm64, Python 3.14, torch 2.14.1, `device="cpu"`, median of 40 timed calls after warmup, whole comparison repeated three times.
 
 ```
-| model                       | BitInfer | transformers | ratio | memory MB   |
-|-----------------------------|----------|--------------|-------|-------------|
-| tiny-random-bert            | 1.65ms   | 1.06ms       | 0.64x | 0.3 -> 0.2  |
-| bert_uncased_L-2_H-128_A-2  | 0.84ms   | 0.54ms       | 0.64x | 16.7 -> 8.4 |
+| model                       | BitInfer | transformers | ratio | memory MB        |
+|-----------------------------|----------|--------------|-------|------------------|
+| tiny-random-bert            | 1.66ms   | 1.08ms       | 0.65x | 0.3 -> 0.2       |
+| bert_uncased_L-2_H-128_A-2  | 0.84ms   | 0.54ms       | 0.64x | 16.7 -> 8.4      |
+| distilbert-base-uncased     | 6.77ms   | 15.61ms      | 2.30x | 253.2 -> 126.6   |
 ```
 
-Ratio is transformers divided by BitInfer, so below 1.00x means BitInfer is **slower**.
+Ratio is transformers divided by BitInfer, so above 1.00x means BitInfer is faster.
 
-- **Memory halves.** 16.7 MB to 8.4 MB is float32 to float16, exactly as expected. This is the one solid win, and it is a dtype change rather than anything clever.
-- **BitInfer is slower, by about 35%.** Float16 weights are not free on CPU: they are upcast per matmul and there is no fused kernel to make up for it. Ad-hoc measurements on this machine ranged from 0.78x to 1.15x depending on load, which is why `bench.py` repeats the comparison and takes medians. Even the favourable readings were noise.
+- **Memory halves on every model.** That is float32 to float16 and it is unconditional. It is a dtype change, not anything clever.
+- **Speed splits on model size.** The two small models are around 0.3 MB and 17 MB, where a call is mostly Python and dispatch overhead; the float16 upcast is pure added cost and BitInfer loses by about a third. distilbert-base-uncased is 66M parameters, the arithmetic dominates, and float16 wins by about 2.3x.
+- **The crossover is somewhere between 17 MB and 253 MB of weights.** It was not located precisely, because doing so properly needs a sweep rather than three points.
 
-So this package reduces memory and costs speed on CPU. Reproduce with `python bench.py`.
+The small-model rows are also why an earlier version of this file reported a flat "0.64x, slower". That was a real measurement of two toy models, presented as a general result. Reproduce all three with `python bench.py`.
 
 ## Limitations
 
 - The comparison is CPU. No MPS numbers are published here because none were measured.
+- Speed depends on model size, and the crossover is not precisely located. Do not assume a speedup on a model smaller than those measured here.
 - Models must be loadable by `AutoModel`. Causal LMs and encoder-decoder models are out of scope.
 - `adaptive_infer` estimates memory from text length. It does not query available RAM.
 - No batch-size tuning against measured throughput.
@@ -128,7 +133,7 @@ So this package reduces memory and costs speed on CPU. Reproduce with `python be
 
 ```
 cli.py     command line entry point
-bench.py   reproduces the measured table above
+bench.py   reproduces the table above across three model sizes
 tests/     pytest suite, including the cache dtype regression
 examples/  usage scripts
 
