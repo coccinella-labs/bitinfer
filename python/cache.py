@@ -66,10 +66,7 @@ class ModelCache:
 
             model_template.load_state_dict(state_dict)
             model_template = model_template.to(cached_dtype)
-            print(
-                f"[lightning] Loaded from cache: {cache_path} "
-                f"({cached_dtype})"
-            )
+            print(f"[lightning] Loaded from cache: {cache_path} ({cached_dtype})")
             return model_template
         except Exception as e:
             print(f"[warning]  Cache load failed: {e}")

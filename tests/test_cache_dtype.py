@@ -15,7 +15,6 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "python"))
 
 import torch  # noqa: E402
-
 from cache import ModelCache  # noqa: E402
 
 MODEL = "hf-internal-testing/tiny-random-bert"
