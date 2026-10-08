@@ -12,35 +12,24 @@ The previous version of this README quoted a single 1.65x figure with no model s
 
 ## Capability
 
-Verified by running each row against this checkout, not read off the source.
+Every Yes row was executed against this checkout rather than read off the
+source. Notes on the rows that are easy to misread are in the table itself.
 
-| Capability                     | BitInfer |
-| ------------------------------ | -------- |
-| Load Hugging Face model        | **Yes**  |
-| Tokenization                   | **Yes**  |
-| CPU/MPS execution              | **Yes**  |
-| Batch inference                | **Yes**  |
-| Streaming inference            | **Yes**  |
-| Adaptive batching              | **Yes**  |
-| Model caching                  | **Yes**  |
-| Quantization/optimization path | **Yes**  |
-| Training                       | **No**   |
-| Backpropagation                | **No**   |
-| Optimizer                      | **No**   |
-| Fine-tuning                    | **No**   |
-| Distributed training           | **No**   |
-
-Notes on the rows that are easy to misread:
-
-- **MPS is the default device** and the tensors do land on the GPU, but every
-  performance number below is CPU. MPS runs; MPS speed is unmeasured.
-- **Quantization path Yes** does not mean 8-bit. `quantization="pytorch"` calls
-  `quantize_dynamic(dtype=torch.qint8)`, which raises on Apple Silicon, and the
-  handler falls back to `model.half()`. The path exists and works; it ends in
-  float16.
-- The five **No** rows are structural. There is no `torch.optim`, no `.backward()`,
-  no `requires_grad`, and no `torch.distributed` anywhere in the tree, so there is
-  no training code to switch off.
+| Capability | BitInfer | Notes |
+| --- | --- | --- |
+| Load Hugging Face model | **Yes** | `AutoModel.from_pretrained`. Encoders only, not causal LMs. |
+| Tokenization | **Yes** | Runs at the inference call, not as a pre-optimization stage. |
+| CPU/MPS execution | **Yes** | MPS is the default and tensors land on the GPU.<br>Every performance number here is CPU. MPS runs; MPS speed is unmeasured. |
+| Batch inference | **Yes** | `batch_infer(texts)`. |
+| Streaming inference | **Yes** | `stream_infer(texts, batch_size)`, yields per input. |
+| Adaptive batching | **Yes** | `adaptive_infer(texts, max_memory_mb)`.<br>Batch size is estimated from text length, not measured RAM. |
+| Model caching | **Yes** | `state_dict` under `~/.bitinfer_cache`. |
+| Quantization/optimization path | **Yes** | Three paths.<br>"pytorch" calls `quantize_dynamic(dtype=torch.qint8)`, which raises on Apple Silicon; the handler falls back to `model.half()`, so it ends in float16. |
+| Training | **No** | No `torch.optim`, no `.backward()`, no `requires_grad` anywhere in the tree. |
+| Backpropagation | **No** | Nothing to switch off. |
+| Optimizer | **No** | Nothing to switch off. |
+| Fine-tuning | **No** | Nothing to switch off. |
+| Distributed training | **No** | No `torch.distributed`, no DDP, no multiprocessing. |
 
 ## Install
 
