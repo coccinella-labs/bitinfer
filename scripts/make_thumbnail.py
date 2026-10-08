@@ -61,6 +61,15 @@ THUMBNAIL = (
 )
 
 
+# The committed banner was rendered with Arial. Glyph metrics differ between
+# fonts, so a byte comparison only means something where the same font exists.
+CANONICAL_FONT = FONT_CANDIDATES[0]
+
+
+def canonical_font_available() -> bool:
+    return Path(CANONICAL_FONT).exists()
+
+
 def load_font(size: int) -> ImageFont.FreeTypeFont:
     for candidate in FONT_CANDIDATES:
         if Path(candidate).exists():
@@ -120,6 +129,13 @@ def main() -> int:
     org = args.repo.split("/")[0]
 
     if args.check:
+        # Verifying means reproducing the exact bytes, which needs the font the
+        # committed image was rendered with. Where that font is absent a
+        # mismatch would say nothing about whether the label is right, so skip
+        # instead of reporting a false failure.
+        if not canonical_font_available():
+            print(f"skipping: {CANONICAL_FONT} is unavailable, cannot reproduce")
+            return 0
         if not THUMBNAIL.exists():
             print(f"{THUMBNAIL} is missing", file=sys.stderr)
             return 1

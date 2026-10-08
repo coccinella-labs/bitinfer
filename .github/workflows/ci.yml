@@ -89,12 +89,11 @@ jobs:
 
     - name: Thumbnail is current
       # The banner's language label came from a hand-edited PNG, which is how it
-      # ended up saying C++ on a Python package. Regenerate it and compare.
-      # --language is pinned because the check must not depend on network.
-      run: |
-        python -m pip install --upgrade pip
-        pip install pillow
-        python scripts/make_thumbnail.py --check --language Python
+      # ended up saying C++ on a Python package. Regenerate and compare. This
+      # only works where Arial is present, which is why it lives in the macOS
+      # job and not in the ubuntu lint job; --language is pinned so the check
+      # does not depend on the network.
+      run: python3 scripts/make_thumbnail.py --check --language Python
 
     - name: Format and lint checks for tests
       # The pre-commit job runs black/isort/flake8 over python/ and cli.py but

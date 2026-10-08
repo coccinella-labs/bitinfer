@@ -12,7 +12,7 @@ repos:
   - repo: local
     hooks:
       - id: thumbnail-current
-        name: thumbnail matches the generated image
+        name: thumbnail matches the generated image (skips without Arial)
         # Regenerate the banner and compare, so the language label cannot drift
         # again. --language is pinned: the hook must not depend on the network.
         entry: python3 scripts/make_thumbnail.py --check --language Python
