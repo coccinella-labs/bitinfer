@@ -8,11 +8,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bitinfer"
 version = "0.1.0"
-description = "Fast quantized inference framework for Apple Silicon"
+description = "Hugging Face encoder inference for Apple Silicon with float16 weights"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "harpertoken", email = "harpertoken@icloud.com"}
+    {name = "coccinella-labs"}
 ]
 requires-python = ">=3.9"
 classifiers = [
