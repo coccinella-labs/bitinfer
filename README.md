@@ -1,356 +1,156 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Coccinella-Labs/bitinfer/main/.github/assets/thumbnail.png" alt="bitinfer" width="100%">
+  <img src="https://raw.githubusercontent.com/coccinella-labs/bitinfer/main/.github/assets/thumbnail.png" alt="bitinfer" width="100%">
 </p>
 
 # BitInfer
 
-<!-- Toggle between styles: Click to switch -->
-<details>
-<summary>[wave] Personal Style (Click to expand)</summary>
+Hugging Face encoder inference for Apple Silicon, with float16 weights, on-disk weight caching, streaming, and a CLI.
 
-## Hey, meet BitInfer.
+Read this before trusting a performance claim. The previous version of this README advertised 1.65x speedups and 50% memory reduction. The memory number was real. **The speedup was not.** On CPU this package is about 35% slower than plain `transformers`, because float16 weights are upcast on every matmul and nothing compensates for it. There are no MPS measurements. Every number below comes from `bench.py`, which is in the repository and reproduces them.
 
-BitInfer makes AI models run faster on your M1 Mac -- usually 1.6x faster, sometimes more. We built it because waiting for inference results is annoying, and 8GB of RAM shouldn't limit what you can do.
-
-We've tested it with models from Hugging Face, optimized it for Apple Silicon, and made it dead simple to use. The performance gains are nice, but it's the "wow, that actually worked" moments when you see your model fly that we remember most.
-
-### What it does
-
-```python
-from bitinfer import BitInfer
-
-# Your model, but faster
-model = BitInfer("distilbert-base-uncased")
-result = model.infer("Hello world")  # 1.6x faster than vanilla PyTorch
-```
-
-BitInfer automatically:
-- Cuts memory usage in half (FP16 optimization)
-- Caches optimized models for instant loading
-- Streams results for real-time apps
-- Adapts batch sizes to your available memory
-
-### Why we built this
-
-M1 Macs are incredible machines, but most AI frameworks treat them like afterthoughts. We wanted something that actually leveraged Metal Performance Shaders properly and didn't require you to think about quantization schemes or memory management.
-
-After building and benchmarking, we had something that consistently beats vanilla PyTorch while using half the memory.
-
-### Getting started
+## Install
 
 ```bash
-# Clone and run
-git clone https://github.com/Coccinella-Labs/bitinfer
-cd bitinfer
-pip install -r requirements.txt
-
-# Try it out
-python cli.py hf-internal-testing/tiny-random-bert --text "Hello BitInfer!" --benchmark
-```
-
-### The numbers
-
-- **BERT-tiny**: 4.8ms vs 7.9ms (1.65x faster)
-- **DistilBERT**: 10.7ms vs 13.8ms (1.29x faster)
-- **Memory**: 50% reduction across all models
-- **Cache**: Instant loading after first run
-
-When you're not benchmarking, you're probably running inference on real data, streaming results, or building production applications. BitInfer handles the optimization so you can focus on the interesting parts.
-
----
-
-*Built with [heart] for Apple Silicon.*
-
-</details>
-
----
-
-## Overview
-
-High-performance inference framework optimized for Apple Silicon with Hugging Face integration.
-
-BitInfer delivers up to 1.65x faster inference speeds while reducing memory usage by 50% on M1/M2 processors. The framework provides seamless integration with Hugging Face models through optimized FP16 quantization and intelligent caching.
-
-## Key Features
-
-- **Performance**: 1.65x speedup on BERT-tiny, 1.29x on DistilBERT
-- **Memory Efficiency**: 50% reduction in memory footprint
-- **Model Caching**: Automatic optimization caching for instant subsequent loads
-- **Streaming Interface**: Real-time batch processing with adaptive memory management
-- **CLI Support**: Production-ready command-line interface
-
-## Installation
-
-```bash
-git clone https://github.com/Coccinella-Labs/bitinfer
+git clone https://github.com/coccinella-labs/bitinfer
 cd bitinfer
 pip install -r requirements.txt
 ```
 
-## API Reference
-
-### BitInfer Class
-
-#### `BitInfer(model_name: str, device: str = "mps", quantization: str = "pytorch", use_cache: bool = True)`
-Initializes BitInfer with optimized model loading and caching.
-
-- **Parameters:**
-  - `model_name: str`: Hugging Face model name (e.g., "distilbert-base-uncased")
-  - `device: str`: Target device. Default: "mps" (Metal Performance Shaders)
-  - `quantization: str`: Optimization method ("pytorch", "metal", "custom"). Default: "pytorch"
-  - `use_cache: bool`: Enable model caching for faster subsequent loads. Default: True
-
-- **Returns:** BitInfer: Initialized inference engine with optimized model
-
-#### `infer(text: str) -> torch.Tensor`
-Runs single text inference with optimized processing.
-
-- **Parameters:**
-  - `text: str`: Input text for inference
-
-- **Returns:** torch.Tensor: Model output with embeddings
-
-#### `batch_infer(texts: List[str]) -> torch.Tensor`
-Processes multiple texts in optimized batches.
-
-- **Parameters:**
-  - `texts: List[str]`: List of input texts
-
-- **Returns:** torch.Tensor: Batch model outputs
-
-#### `stream_infer(texts: List[str], batch_size: int = None) -> Iterator`
-Streams inference results for real-time processing.
-
-- **Parameters:**
-  - `texts: List[str]`: Input texts to process
-  - `batch_size: int`: Batch size for streaming. Default: 4
-
-- **Returns:** Iterator: Stream of inference results with metadata
-
-#### `adaptive_infer(texts: List[str], max_memory_mb: float = 1000) -> Iterator`
-Memory-aware batch processing with automatic size adjustment.
-
-- **Parameters:**
-  - `texts: List[str]`: Input texts
-  - `max_memory_mb: float`: Maximum memory usage in MB. Default: 1000
-
-- **Returns:** Iterator: Adaptive batch results
-
-#### `cache_info() -> Dict`
-Returns model cache information and statistics.
-
-- **Returns:** Dict: Cache size, directory, and metadata
-
-#### `clear_cache() -> None`
-Clears all cached optimized models.
-
-### CLI Interface
-
-The `cli.py` command provides comprehensive command-line access to BitInfer functionality.
-
-```
-usage: cli.py [-h] [--text TEXT] [--file FILE] [--batch BATCH [BATCH ...]]
-              [--quantization {pytorch,metal,custom}] [--device DEVICE]
-              [--no-cache] [--output OUTPUT] [--format {json,text}]
-              [--streaming] [--batch-size BATCH_SIZE] [--benchmark]
-              [--cache-info] [--clear-cache]
-              model
-
-BitInfer - Fast inference framework for Apple Silicon
-
-positional arguments:
-  model                 Hugging Face model name (e.g., distilbert-base-uncased)
-
-options:
-  -h, --help            show this help message and exit
-  --text, -t TEXT       Single text to process
-  --file, -f FILE       File containing texts (one per line)
-  --batch, -b BATCH [BATCH ...]
-                        Multiple texts as arguments
-  --quantization, -q {pytorch,metal,custom}
-                        Quantization method (default: pytorch)
-  --device, -d DEVICE   Device to use (default: mps)
-  --no-cache            Disable model caching
-  --output, -o OUTPUT   Output file for results
-  --format {json,text}  Output format
-  --streaming, -s       Use streaming inference
-  --batch-size BATCH_SIZE
-                        Batch size for streaming
-  --benchmark           Run benchmark
-  --cache-info          Show cache information
-  --clear-cache         Clear model cache
-```
+Apple Silicon is the target. `device="mps"` is the default; `device="cpu"` works everywhere and is what the numbers below were taken on, because a CPU comparison is the honest one to make.
 
 ## Usage
 
-### As a Library
+The package directory is `python/`, so imports need a path entry:
 
 ```python
-from bitinfer import BitInfer
+import sys
+sys.path.insert(0, "python")
 
-# Basic usage
-model = BitInfer("distilbert-base-uncased")
+from core import BitInfer
+
+model = BitInfer("google/bert_uncased_L-2_H-128_A-2")
 result = model.infer("Sample text")
-print(f"Output shape: {result.last_hidden_state.shape}")
+
+print(result.last_hidden_state.shape)   # (1, sequence_length, hidden)
 ```
 
-#### Advanced Usage
+`infer` returns the Hugging Face model output, not a tensor, so the embeddings live at `.last_hidden_state`. After `pip install -e .` the modules import directly and the path line is unnecessary.
+
+### Streaming
 
 ```python
-# Batch processing with streaming
-model = BitInfer("bert-base-uncased", quantization="pytorch")
-
-texts = ["Text 1", "Text 2", "Text 3", "Text 4"]
-
-# Stream results as they're processed
-for result in model.stream_infer(texts, batch_size=2):
-    print(f"Processed: {result['text']}")
-    print(f"Shape: {result['embedding'].shape}")
-
-# Adaptive memory management
-large_texts = ["Long text..."] * 100
-for result in model.adaptive_infer(large_texts, max_memory_mb=500):
-    process_batch(result)
+for item in model.stream_infer(["first", "second"], batch_size=2):
+    item["text"]        # the input string
+    item["embedding"]   # last_hidden_state[row] for that input
+    item["batch_index"] # position in the original list
 ```
 
-### CLI Usage
+Batches internally and yields one dict per input. Verified keys: `batch_index`, `embedding`, `text`.
+
+### Adaptive batching
+
+```python
+for item in model.adaptive_infer(texts, max_memory_mb=500):
+    ...
+```
+
+Batch size is estimated from average token count over the first 10 inputs, capped at 32. It is a heuristic on text length, not a measurement of available memory.
+
+### Caching
+
+```python
+model = BitInfer(name, use_cache=True)
+model.cache_info()   # {'cache_size_mb': ..., 'cache_dir': '~/.bitinfer_cache'}
+model.clear_cache()
+```
+
+The cache stores a `state_dict` under `~/.bitinfer_cache`, keyed by model name and quantization method.
+
+Caching had a real bug, now fixed. `load_state_dict` copies each tensor into the destination parameter's dtype, and the template comes from `from_pretrained` in float32. A model cached as float16 was therefore silently upcast to float32 on the next run, so the "optimized" model ran unoptimized while reporting a cache hit. `load_model` now restores the cached dtype:
+
+```
+before   1st run float16   cache hit float32   <- optimization lost
+after    1st run float16   cache hit float16
+```
+
+### CLI
 
 ```bash
-# Single text inference
-python cli.py distilbert-base-uncased --text "Hello BitInfer!"
-
-# Batch processing from file
-python cli.py bert-base-uncased --file inputs.txt --format json --output results.json
-
-# Streaming with custom batch size
-python cli.py hf-internal-testing/tiny-random-bert --batch "Text 1" "Text 2" "Text 3" --streaming --batch-size 2
-
-# Performance benchmarking
-python cli.py distilbert-base-uncased --text "Benchmark test" --benchmark
-
-# Cache management
-python cli.py any-model --cache-info
-python cli.py any-model --clear-cache
+python cli.py <model> --text "Hello"
+python cli.py <model> --file inputs.txt --format json --output results.json
+python cli.py <model> --batch "one" "two" --streaming --batch-size 2
+python cli.py <model> --cache-info
+python cli.py <model> --clear-cache
+python cli.py <model> --text "..." --benchmark
 ```
 
-### Advanced Examples
+`--benchmark` times a single run of the current code against nothing. There is no baseline comparison anywhere in it, so its output cannot support a speedup claim. Use `bench.py` for that.
 
-#### Custom Quantization
-```python
-# Test different optimization methods
-models = {
-    "pytorch": BitInfer("distilbert-base-uncased", quantization="pytorch"),
-    "metal": BitInfer("distilbert-base-uncased", quantization="metal"),
-    "custom": BitInfer("distilbert-base-uncased", quantization="custom")
-}
+## What quantization actually does
 
-for name, model in models.items():
-    result = model.infer("Performance test")
-    print(f"{name}: {result.last_hidden_state.shape}")
-```
-
-#### Error Handling
-```python
-try:
-    model = BitInfer("invalid-model-name")
-except Exception as e:
-    print(f"Model loading error: {e}")
-
-try:
-    result = model.infer("")  # Empty input
-except ValueError as e:
-    print(f"Input validation error: {e}")
-```
-
-## Performance Benchmarks
-
-| Model | BitInfer | PyTorch | Speedup | Memory Reduction |
-|-------|----------|---------|---------|------------------|
-| BERT-tiny | 4.8ms | 7.9ms | 1.65x | 50% |
-| DistilBERT | 10.7ms | 13.8ms | 1.29x | 50% |
-
-## Common Issues
-
-### **1. Model Loading Failures**
-
-Ensure the Hugging Face model name is correct and accessible. BitInfer automatically downloads models on first use.
-
-### **2. Memory Constraints**
-
-On 8GB systems, use smaller models or enable streaming inference for large batches:
+`quantization="pytorch"` is the default and its name is misleading. The path is:
 
 ```python
-# Use streaming for large datasets
-for result in model.stream_infer(large_texts, batch_size=2):
-    process_result(result)
+torch.quantization.quantize_dynamic(model, {nn.Linear, ...}, dtype=torch.qint8)
 ```
 
-### **3. Device Compatibility**
+On Apple Silicon that call raises `RuntimeError` containing `NoQEngine`, and the handler falls back to `model.half()`. So on this hardware the default path ends up float16, not 8-bit, and it reaches that state through an exception rather than by design.
 
-BitInfer is optimized for Apple Silicon. On other systems, set `device="cpu"`:
+`quantization="metal"` casts inputs to half inside `infer`. `quantization="custom"` uses an 8-bit implementation in `python/custom_quant.py`.
 
-```python
-model = BitInfer("model-name", device="cpu")
+## Measured results
+
+Apple M1, arm64, Python 3.14, torch 2.14.1, `device="cpu"`, median of 40 timed calls after warmup, whole comparison repeated three times.
+
+```
+| model                       | BitInfer | transformers | ratio | memory MB   |
+|-----------------------------|----------|--------------|-------|-------------|
+| tiny-random-bert            | 1.65ms   | 1.06ms       | 0.64x | 0.3 -> 0.2  |
+| bert_uncased_L-2_H-128_A-2  | 0.84ms   | 0.54ms       | 0.64x | 16.7 -> 8.4 |
 ```
 
-### Why Optimization Matters
+Ratio is transformers divided by BitInfer, so below 1.00x means BitInfer is **slower**.
 
-Proper model optimization is essential for:
+- **Memory halves.** 16.7 MB to 8.4 MB is float32 to float16, exactly as expected. This is the one solid win, and it is a dtype change rather than anything clever.
+- **BitInfer is slower, by about 35%.** Float16 weights are not free on CPU: they are upcast per matmul and there is no fused kernel to make up for it. Ad-hoc measurements on this machine ranged from 0.78x to 1.15x depending on load, which is why `bench.py` repeats the comparison and takes medians. Even the favourable readings were noise.
 
-* Maximizing inference speed on Apple Silicon
-* Reducing memory usage for larger models
-* Enabling real-time applications with streaming
-* Maintaining accuracy while improving performance
+So this package reduces memory and costs speed on CPU. Reproduce with `python bench.py`.
 
-When optimization is bypassed, models may run slower than vanilla PyTorch and consume unnecessary memory.
+## Limitations
 
-## Recommendation
+- The comparison is CPU. No MPS numbers are published here because none were measured.
+- Models must be loadable by `AutoModel`. Causal LMs and encoder-decoder models are out of scope.
+- `adaptive_infer` estimates memory from text length. It does not query available RAM.
+- No batch-size tuning against measured throughput.
+- `cpp/`, `metal/` and `bindings/` are not wired into the Python path. The Python implementation is pure PyTorch.
 
-For optimal performance:
+## Layout
 
-* Use default `quantization="pytorch"` for best speed/accuracy balance
-* Enable caching with `use_cache=True` for repeated model usage
-* Use streaming inference for large datasets or real-time applications
-* Monitor memory usage with `cache_info()` and clear cache when needed
-
-### Example of Suboptimal Configuration
-
-```python
-# Disables key optimizations
-model = BitInfer(
-    "large-model",
-    device="cpu",  # Not using Apple Silicon acceleration
-    quantization="custom",  # Slower than pytorch method
-    use_cache=False  # No caching benefit
-)
+```
+python/            the implementation
+  core.py          BitInfer
+  quantization.py  dynamic quantize with a float16 fallback
+  cache.py         state_dict cache
+  streaming.py     streaming and adaptive batching
+  custom_quant.py, metal_opt.py
+cli.py             command line
+bench.py           reproduces the table above
+tests/             pytest suite, including the cache dtype regression
+cpp/, metal/, bindings/   not used by the Python path
 ```
 
-### Example of Optimal Configuration
+## Tests
 
-```python
-# Leverages all optimizations
-model = BitInfer(
-    "distilbert-base-uncased",
-    device="mps",  # Apple Silicon acceleration
-    quantization="pytorch",  # Fastest method
-    use_cache=True  # Instant subsequent loads
-)
+```bash
+python -m pytest tests/ -v
 ```
 
-## Architecture
-
-- **Quantization Engine**: FP16 optimization for Apple Silicon
-- **Caching System**: Persistent model optimization storage
-- **Streaming Processor**: Memory-aware batch processing
-- **CLI Interface**: Full-featured command-line tool
+CI runs the suite on macOS and lint on Ubuntu. Reverting the cache fix makes `test_cache_preserves_dtype` fail, so that bug cannot return silently.
 
 ## Requirements
 
-- macOS with Apple Silicon (M1/M2)
-- Python 3.9+
-- PyTorch 2.0+
-- Transformers 4.20+
+Python 3.9+, torch 2.0+, transformers 4.20+, Apple Silicon for the default device.
 
 ## License
 
-MIT License
+MIT. See [LICENSE](LICENSE).

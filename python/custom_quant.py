@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2026 harpertoken
+# SPDX-FileCopyrightText: 2026 coccinella-labs
 import numpy as np
 import torch
 import torch.nn as nn

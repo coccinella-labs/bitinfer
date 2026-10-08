@@ -5,3 +5,6 @@ __pycache__/
 # OS clutter
 .DS_Store
 Thumbs.db
+
+# CMake build artifacts
+build/

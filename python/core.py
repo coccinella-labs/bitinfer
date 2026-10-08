@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2026 harpertoken
+# SPDX-FileCopyrightText: 2026 coccinella-labs
 import torch
 from transformers import AutoModel, AutoTokenizer
 

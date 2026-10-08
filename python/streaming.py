@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2026 harpertoken
+# SPDX-FileCopyrightText: 2026 coccinella-labs
 from typing import Iterator, List, Union
 
 import torch

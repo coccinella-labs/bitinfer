@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2026 harpertoken
+# SPDX-FileCopyrightText: 2026 coccinella-labs
 import hashlib
 import os  # noqa: F401
 import pickle
 from pathlib import Path
+
+import torch
 
 
 class ModelCache:
@@ -37,7 +39,15 @@ class ModelCache:
             return False
 
     def load_model(self, model_template, model_name, quantization):
-        """Load optimized model from cache"""
+        """Load optimized model from cache.
+
+        `load_state_dict` copies each tensor into the destination parameter's
+        own dtype, and the template comes from `from_pretrained` in float32, so
+        a float16 model cached as float16 was silently upcast to float32 on the
+        next run. The "optimized" model then ran unoptimized while reporting a
+        cache hit. The model is therefore cast back to the cached dtype after
+        loading, which is the whole point of caching it.
+        """
         cache_key = self._get_cache_key(model_name, quantization)
         cache_path = self._get_cache_path(cache_key)
 
@@ -47,8 +57,19 @@ class ModelCache:
         try:
             with open(cache_path, "rb") as f:
                 state_dict = pickle.load(f)
+
+            cached_dtype = next(
+                (v.dtype for v in state_dict.values() if torch.is_tensor(v)), None
+            )
+            if cached_dtype is None:
+                return None
+
             model_template.load_state_dict(state_dict)
-            print(f"[lightning] Loaded from cache: {cache_path}")
+            model_template = model_template.to(cached_dtype)
+            print(
+                f"[lightning] Loaded from cache: {cache_path} "
+                f"({cached_dtype})"
+            )
             return model_template
         except Exception as e:
             print(f"[warning]  Cache load failed: {e}")
