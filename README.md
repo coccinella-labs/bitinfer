@@ -55,7 +55,7 @@ python cli.py hf-internal-testing/tiny-random-bert --text "Hello BitInfer!" --be
 - **Memory**: 50% reduction across all models
 - **Cache**: Instant loading after first run
 
-When you're not benchmarking, you're probably running inference on real data, streaming results, or building something cool. BitInfer handles the optimization so you can focus on the interesting parts.
+When you're not benchmarking, you're probably running inference on real data, streaming results, or building production applications. BitInfer handles the optimization so you can focus on the interesting parts.
 
 ---
 
