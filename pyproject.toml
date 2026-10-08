@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2026 harpertoken
+# SPDX-FileCopyrightText: 2026 coccinella-labs
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
