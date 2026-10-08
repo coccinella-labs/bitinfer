@@ -41,7 +41,10 @@ dev = [
     "pre-commit>=3.0.0",
     "black>=25.1.0",
     "isort>=5.13.2",
-    "flake8>=7.1.1"
+    "flake8>=7.1.1",
+    # Needed by scripts/make_thumbnail.py, which the pre-commit hook runs.
+    "pillow>=10.0.0",
+    "pytest>=8.0.0"
 ]
 
 [project.urls]
