@@ -127,16 +127,23 @@ So this package reduces memory and costs speed on CPU. Reproduce with `python be
 ## Layout
 
 ```
-python/            the implementation
-  core.py          BitInfer
-  quantization.py  dynamic quantize with a float16 fallback
-  cache.py         state_dict cache
-  streaming.py     streaming and adaptive batching
-  custom_quant.py, metal_opt.py
-cli.py             command line
-bench.py           reproduces the table above
-tests/             pytest suite, including the cache dtype regression
-cpp/, metal/, bindings/   not used by the Python path
+cli.py     command line entry point
+bench.py   reproduces the measured table above
+tests/     pytest suite, including the cache dtype regression
+examples/  usage scripts
+
+python/    the implementation
+  core.py           BitInfer
+  quantization.py   dynamic quantize, float16 fallback
+  cache.py          state_dict cache
+  streaming.py      streaming and adaptive batching
+  custom_quant.py   8-bit path, quantization="custom"
+  metal_opt.py      FP16 input cast, quantization="metal"
+
+Not used by the Python path, which is pure PyTorch:
+cpp/       C++ sources, unused
+metal/     Metal shader, unused
+bindings/  pybind11 binding, unused
 ```
 
 ## Tests
